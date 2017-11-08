@@ -50,31 +50,29 @@ function resolveCardIndex(list, card) {
 }
 
 
-function decomposeMove(animateState, code, pc, pl, ps, pp, cc, cl, cs, cp) {
+function decomposeMove(setState, moveRequest) {
+    var newLocation = moveRequest.location;
 
-    console.log(code, pc, pl, ps, pp, cc, cl, cs, cp);
-    var query,
-        newcard;
-    if (pl === 0) {
+    if (!moveRequest.location) {
         // create a new card
+        // makeNewCard(currentLocation, currentController, currentSequence, position, code, index) 
         return;
-    } else if (cl === 0) {
+    } else if (moveRequest.moveLocation) {
         // delete a card
+        // removeCard(uid);
         return;
     } else {
-
-        if (!(pl & 0x80) && !(cl & 0x80)) { //duelclient line 1885
+        if (moveRequest.location !== 'OVERLAY' && moveRequest.moveLocation !== 'OVERLAY') { //duelclient line 1885
             // normal movement
-        } else if (!(pl & 0x80)) {
+        } else if (moveRequest.location !== 'OVERLAY') {
             // targeting a card to become a xyz unit....
-            animateState(pc, pl, ps, cc, (cl & 0x7f), cs, cp, undefined, true);
-        } else if (!(cl & 0x80)) {
-            console.log('turning an xyz unit into a normal card....');
-            animateState(pc, (pl & 0x7f), ps, cc, cl, cs, cp, pp);
+            setState(moveRequest.player, moveRequest.location, moveRequest.index, moveRequest.moveplayer, 'OVERLAY', moveRequest.moveindex, moveRequest.moveposition, undefined, true);
+        } else if (moveRequest.moveLocation !== 'OVERLAY') {
+            // turning an xyz unit into a normal card....
+            setState(moveRequest.player, 'OVERLAY', moveRequest.index, moveRequest.moveplayer, moveRequest.moveLocationAsEnum, moveRequest.moveindex, moveRequest.moveposition, moveRequest.overlayindex);
         } else {
-            console.log('move one xyz unit to become the xyz unit of something else....');
-            animateState(pc, (pl & 0x7f), ps, cc, (cl & 0x7f), cs, cp, pp, true);
-
+            // move one xyz unit to become the xyz unit of something else....
+            setState(moveRequest.player, 'OVERLAY', moveRequest.index, moveRequest.moveplayer, 'OVERLAY', moveRequest.moveindex, moveRequest.moveposition, moveRequest.overlayindex, true);
         }
     }
 }
