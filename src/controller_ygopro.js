@@ -49,6 +49,36 @@ function resolveCardIndex(list, card) {
     return number;
 }
 
+
+function decomposeMove(animateState, code, pc, pl, ps, pp, cc, cl, cs, cp) {
+
+    console.log(code, pc, pl, ps, pp, cc, cl, cs, cp);
+    var query,
+        newcard;
+    if (pl === 0) {
+        // create a new card
+        return;
+    } else if (cl === 0) {
+        // delete a card
+        return;
+    } else {
+
+        if (!(pl & 0x80) && !(cl & 0x80)) { //duelclient line 1885
+            // normal movement
+        } else if (!(pl & 0x80)) {
+            // targeting a card to become a xyz unit....
+            animateState(pc, pl, ps, cc, (cl & 0x7f), cs, cp, undefined, true);
+        } else if (!(cl & 0x80)) {
+            console.log('turning an xyz unit into a normal card....');
+            animateState(pc, (pl & 0x7f), ps, cc, cl, cs, cp, pp);
+        } else {
+            console.log('move one xyz unit to become the xyz unit of something else....');
+            animateState(pc, (pl & 0x7f), ps, cc, (cl & 0x7f), cs, cp, pp, true);
+
+        }
+    }
+}
+
 // Good, means completed in the UI.
 function boardController(gameBoard, slot, message, ygopro) {
     'use strict';
@@ -319,7 +349,7 @@ function boardController(gameBoard, slot, message, ygopro) {
                 var messageBuffer = [answer.length].concat(answer.map(function(card) {
                     return resolveCardIndex(message.selectable_targets, card);
                 })).filter(function(card) {
-                    return (card !== undefined)
+                    return (card !== undefined);
                 });
                 ygopro.write(gameResponse('CTOS_RESPONSE', new Buffer(messageBuffer)));
             });
