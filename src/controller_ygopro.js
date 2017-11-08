@@ -50,30 +50,46 @@ function resolveCardIndex(list, card) {
 }
 
 
-function decomposeMove(setState, moveRequest) {
-    var newLocation = moveRequest.location;
+function decomposeMove(gameBoard, moveRequest) {
+    var simplyMovingCard = (moveRequest.location !== 'OVERLAY' && moveRequest.moveLocation !== 'OVERLAY'),
+        convertingToXyZUnit = (moveRequest.location !== 'OVERLAY'),
+        convertingToCard = (moveRequest.moveLocation !== 'OVERLAY'),
+        createNewCard = !(moveRequest.location),
+        deletingCard = !(moveRequest.moveLocation);
 
-    if (!moveRequest.location) {
-        // create a new card
-        // makeNewCard(currentLocation, currentController, currentSequence, position, code, index) 
+    if (createNewCard) {
+        gameBoard.makeNewCard(moveRequest.location,
+            moveRequest.player,
+            moveRequest.index,
+            moveRequest.moveposition,
+            moveRequest.id,
+            moveRequest.moveindex);
         return;
-    } else if (moveRequest.moveLocation) {
-        // delete a card
-        // removeCard(uid);
+    }
+    if (deletingCard) {
+        moveRequest.movelocation = 'INMATERIAL';
+        gameBoard.setState(moveRequest);
+        return;
+    }
+    if (simplyMovingCard) {
+        gameBoard.setState(moveRequest);
+        return;
+    }
+    if (convertingToXyZUnit) {
+        moveRequest.movelocation = 'OVERLAY';
+        gameBoard.setState(moveRequest);
+        return;
+    }
+    if (convertingToCard) {
+        moveRequest.location = 'OVERLAY';
+        gameBoard.setState(moveRequest);
         return;
     } else {
-        if (moveRequest.location !== 'OVERLAY' && moveRequest.moveLocation !== 'OVERLAY') { //duelclient line 1885
-            // normal movement
-        } else if (moveRequest.location !== 'OVERLAY') {
-            // targeting a card to become a xyz unit....
-            setState(moveRequest.player, moveRequest.location, moveRequest.index, moveRequest.moveplayer, 'OVERLAY', moveRequest.moveindex, moveRequest.moveposition, undefined, true);
-        } else if (moveRequest.moveLocation !== 'OVERLAY') {
-            // turning an xyz unit into a normal card....
-            setState(moveRequest.player, 'OVERLAY', moveRequest.index, moveRequest.moveplayer, moveRequest.moveLocationAsEnum, moveRequest.moveindex, moveRequest.moveposition, moveRequest.overlayindex);
-        } else {
-            // move one xyz unit to become the xyz unit of something else....
-            setState(moveRequest.player, 'OVERLAY', moveRequest.index, moveRequest.moveplayer, 'OVERLAY', moveRequest.moveindex, moveRequest.moveposition, moveRequest.overlayindex, true);
-        }
+        // Move Xyz Unit from one card to another, example Rank-Up Magic Barian's Force.
+        moveRequest.location = 'OVERLAY';
+        moveRequest.movelocation = 'OVERLAY';
+        gameBoard.setState(moveRequest);
+        return;
     }
 }
 
@@ -226,16 +242,7 @@ function boardController(gameBoard, slot, message, ygopro) {
             askUser(gameBoard, slot, message, ygopro);
             break;
         case ('MSG_MOVE'): // Good
-            gameBoard.setState({
-                player: message.pc,
-                clocation: message.pl,
-                index: message.ps,
-                moveplayer: message.cc,
-                movelocation: message.cl,
-                moveindex: message.cs,
-                moveposition: message.cp,
-                overlayindex: 0
-            });
+            decomposeMove(gameBoard, message);
             break;
         case ('MSG_POS_CHANGE'):
             gameBoard.setState({
