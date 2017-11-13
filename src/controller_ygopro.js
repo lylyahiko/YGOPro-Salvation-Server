@@ -51,46 +51,28 @@ function resolveCardIndex(list, card) {
 
 
 function decomposeMove(gameBoard, moveRequest) {
-    var simplyMovingCard = (moveRequest.location !== 'OVERLAY' && moveRequest.moveLocation !== 'OVERLAY'),
-        convertingToXyZUnit = (moveRequest.location !== 'OVERLAY'),
-        convertingToCard = (moveRequest.moveLocation !== 'OVERLAY'),
-        createNewCard = !(moveRequest.location),
-        deletingCard = !(moveRequest.moveLocation);
+    var simplyMovingCard = (moveRequest.clocation !== 'OVERLAY' && moveRequest.moveLocation !== 'OVERLAY'),
+        convertingToXyZUnit = (moveRequest.clocation === 'OVERLAY'),
+        convertingToCard = (moveRequest.moveLocation === 'OVERLAY'),
+        createNewCard = (moveRequest.locationAsEnum === 0),
+        deletingCard = (moveRequest.moveLocationAsEnum === 0);
 
     if (createNewCard) {
-        gameBoard.makeNewCard(moveRequest.location,
+        gameBoard.makeNewCard(moveRequest.clocation,
             moveRequest.player,
             moveRequest.index,
             moveRequest.moveposition,
             moveRequest.id,
             moveRequest.moveindex);
         return;
-    }
+    } 
     if (deletingCard) {
         moveRequest.movelocation = 'INMATERIAL';
         gameBoard.setState(moveRequest);
         return;
     }
-    if (simplyMovingCard) {
-        gameBoard.setState(moveRequest);
-        return;
-    }
-    if (convertingToXyZUnit) {
-        moveRequest.movelocation = 'OVERLAY';
-        gameBoard.setState(moveRequest);
-        return;
-    }
-    if (convertingToCard) {
-        moveRequest.location = 'OVERLAY';
-        gameBoard.setState(moveRequest);
-        return;
-    } else {
-        // Move Xyz Unit from one card to another, example Rank-Up Magic Barian's Force.
-        moveRequest.location = 'OVERLAY';
-        moveRequest.movelocation = 'OVERLAY';
-        gameBoard.setState(moveRequest);
-        return;
-    }
+    gameBoard.setState(moveRequest);
+    return;
 }
 
 // Good, means completed in the UI.

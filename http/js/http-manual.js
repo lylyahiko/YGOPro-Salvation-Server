@@ -344,7 +344,7 @@ function makeSideCard(cards, zone) {
     cards.forEach(function(card, index) {
         var hardcard = JSON.stringify(card),
             src = card + '.png';
-        html += '<img class="sidedeckzonecard" src="https://raw.githubusercontent.com/shadowfox87/YGOSeries10CardPics/master/' + src + '" data-"' + card + '" onclick = "sideonclick(' + index + ', \'' + zone + '\')" / > ';
+        html += '<img class="sidedeckzonecard" src="https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/' + src + '" data-"' + card + '" onclick = "sideonclick(' + index + ', \'' + zone + '\')" / > ';
 
     });
     $('img.sidedeckzonecard').error(cardLoadError);
@@ -486,7 +486,7 @@ function stateUpdate(dataBinding) {
             'data-id': ref.id,
             'data-uid': ref.uid,
             'reloaded': element.attr('reloaded'),
-            'src': (ref.id) ? 'https://raw.githubusercontent.com/shadowfox87/YGOSeries10CardPics/master/pics/' + ref.id + '.png' : 'img/textures/cover.jpg'
+            'src': (ref.id) ? 'https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/pics/' + ref.id + '.png' : 'img/textures/cover.jpg'
         });
 
         if (ref.position === 'FaceDownDefence' || ref.position === 'FaceDownAttack') {
@@ -944,7 +944,7 @@ function reveal(cards, note) {
             });
         } else {
             cards.forEach(function(card, index) {
-                var src = (card.id) ? 'https://raw.githubusercontent.com/shadowfox87/YGOSeries10CardPics/master/' + card.id + '.png' : 'img/textures/cover.jpg';
+                var src = (card.id) ? 'https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/' + card.id + '.png' : 'img/textures/cover.jpg';
                 src = (note === 'specialcard' || card.note) ? 'img/textures/' + card.id + '.jpg' : src;
                 card.uid = card.uid || card.id;
                 revealcache.push(card);
@@ -1256,7 +1256,7 @@ function manualReciver(message) {
             break;
         case 'effect':
             $('#effectflasher').css('display', 'block');
-            $('#effectflasher .mainimage').attr('src', 'https://raw.githubusercontent.com/shadowfox87/YGOSeries10CardPics/master/' + message.id + '.png');
+            $('#effectflasher .mainimage').attr('src', 'https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/' + message.id + '.png');
             setTimeout(function() {
                 $('#effectflasher').css('display', 'none');
             }, 1000);
@@ -2444,7 +2444,8 @@ function resolveQuestion(answer) {
     console.log('resolving question');
     activeQuestion.answer.push(answer);
 
-    if (activeQuestion.answer.length === activeQuestion.answerLength.max) {
+    if (activeQuestion.answer.length >= activeQuestion.answerLength.max) {
+        activeQuestion.answer.length = activeQuestion.answerLength.max; //snip
         primus.write((activeQuestion));
         $('#revealed, #revealedclose').css('display', 'none');
         $('.selectQuestionSet').css('display', 'none');

@@ -548,19 +548,20 @@ function recieveSTOC(gameBoard, packet) {
                 case ('MSG_MOVE'):
                     message.id = BufferIO.readInt32();
                     message.player = BufferIO.readInt8();
-                    message.locationAsEnum = enums.locations[BufferIO.readInt8()];
-                    message.location = enums.locations[message.locationAsEnum];
-                    if (message.pl & 0x7f) {
+                    message.locationAsEnum = BufferIO.readInt8();
+                    message.clocation = enums.locations[message.locationAsEnum];
+                    if (message.locationAsEnum & 0x80) {
                         message.location = 'OVERLAY';
                     }
                     message.index = BufferIO.readInt8();
                     message.pp = BufferIO.readInt8(); // padding?? previous position??
                     message.moveplayer = BufferIO.readInt8();
-                    message.movelocationAsEnum = enums.locations[BufferIO.readInt8()];
+                    message.movelocationAsEnum = BufferIO.readInt8();
                     message.movelocation = enums.locations[message.movelocationAsEnum];
-                    if (message.movelocationAsEnum & 0x7f) {
+                    if (message.movelocationAsEnum & 0x80){
                         message.movelocation = 'OVERLAY';
                     }
+                    message.moveindex = BufferIO.readInt8();
                     message.moveposition = enums.positions[BufferIO.readInt8()];
                     message.reason = BufferIO.readInt32(); //debug data??
                     break;

@@ -587,7 +587,7 @@ function init(callback) {
             movelocation = changeRequest.movelocation,
             moveindex = changeRequest.moveindex,
             moveposition = changeRequest.moveposition,
-            overlayindex = changeRequest.overlayindex,
+            overlayindex = changeRequest.overlayindex || 0,
             uid = changeRequest.uid,
             target = queryCard(player, clocation, index, overlayindex, uid),
             pointer = uidLookup(target.uid),
