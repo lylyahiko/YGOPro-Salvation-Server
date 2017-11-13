@@ -3,21 +3,22 @@
 
 function cardLoadError() {
     var id = $(this).attr('data-id');
-    if ($(this).attr('reloaded') === 'failed') {
-        $(this).attr('src', '/img/textures/unknown.jpg');
-    }
-    if ($(this).attr('reloaded') === 'attempted') {
-        $(this).attr('src', getCardObject(parseInt(id, 10)+2).picture);
-        $(this).attr('reloaded', 'failed');
-    } else {
-        $(this).attr('reloaded', 'attempted');
-        if (id !== 'undefined') {
-            $(this).attr('src', getCardObject(parseInt(id, 10)+1).picture);
-        } else {
-            $(this).attr('src', '/img/textures/unknown.jpg');
-        }
+    $(this).attr('src', '/img/textures/unknown.jpg');
+    // if ($(this).attr('reloaded') === 'failed') {
+       
+    // }
+    // if ($(this).attr('reloaded') === 'attempted') {
+    //     $(this).attr('src', getCardObject(parseInt(id, 10)+2).picture);
+    //     $(this).attr('reloaded', 'failed');
+    // } else {
+    //     $(this).attr('reloaded', 'attempted');
+    //     if (id !== 'undefined') {
+    //         $(this).attr('src', getCardObject(parseInt(id, 10)+1).picture);
+    //     } else {
+    //         $(this).attr('src', '/img/textures/unknown.jpg');
+    //     }
 
-    }
+    // }
 }
 
 function printError(error) {

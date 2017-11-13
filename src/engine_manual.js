@@ -108,7 +108,8 @@ function makeCard(movelocation, player, index, unique, code) {
         overlayindex: 0,
         uid: unique,
         originalcontroller: player,
-        counters: 0
+        counters: 0,
+        overlayUnits: []
     };
 }
 
@@ -119,7 +120,7 @@ function makeCard(movelocation, player, index, unique, code) {
  * @returns {Card[]} a stack of cards, devoid of overlay units.
  */
 function filterIsCard(stack) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.type === 'card';
     });
 }
@@ -131,7 +132,7 @@ function filterIsCard(stack) {
  * @returns {Card[]} a stack of cards that belong to only one specified player. 
  */
 function filterPlayer(stack, player) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.player === player;
     });
 }
@@ -143,7 +144,7 @@ function filterPlayer(stack, player) {
  * @returns {Card[]} a stack of cards that are in only one location/zone.
  */
 function filterlocation(stack, location) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.location === location;
     });
 }
@@ -155,7 +156,7 @@ function filterlocation(stack, location) {
  * @returns {Card[]} a stack of cards that are in only one index
  */
 function filterIndex(stack, index) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.index === index;
     });
 }
@@ -166,7 +167,7 @@ function filterIndex(stack, index) {
  * @returns {Card[]} a single card
  */
 function filterOverlyIndex(stack, overlayindex) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.overlayindex === overlayindex;
     });
 }
@@ -178,7 +179,7 @@ function filterOverlyIndex(stack, overlayindex) {
  * @returns {Boolean} if a card is that UID
  */
 function filterUID(stack, uid) {
-    return stack.filter(function(item) {
+    return stack.filter(function (item) {
         return item.uid === uid;
     });
 }
@@ -216,7 +217,7 @@ function shuffle(deck) {
  */
 function hideViewOfZone(view) {
     var output = [];
-    view.forEach(function(card, index) {
+    view.forEach(function (card, index) {
         output[index] = {};
         Object.assign(output[index], card);
         if (output[index].position === 'FaceDown' || output[index].position === 'FaceDownDefence' || output[index].position === 'FaceDownDefense') {
@@ -236,7 +237,7 @@ function hideViewOfZone(view) {
  */
 function cleanCounters(stack) {
 
-    stack.forEach(function(card, index) {
+    stack.forEach(function (card, index) {
         if (card.position === 'FaceDown' || card.position === 'FaceDownDefense') {
             card.counters = 0;
         }
@@ -251,7 +252,7 @@ function cleanCounters(stack) {
  */
 function hideHand(view) {
     var output = [];
-    view.forEach(function(card, index) {
+    view.forEach(function (card, index) {
         output[index] = {};
         Object.assign(output[index], card);
         output[index].id = 0;
@@ -274,7 +275,7 @@ function init(callback) {
 
 
     if (typeof callback !== 'function') {
-        callback = function(view, internalState) {};
+        callback = function (view, internalState) { };
     }
 
     var answerListener = new EventEmitter(),
@@ -336,7 +337,7 @@ function init(callback) {
      */
     function uidLookup(uid) {
         var result;
-        stack.some(function(card, index) {
+        stack.some(function (card, index) {
             if (card.uid === uid) {
                 result = index;
                 return true;
@@ -370,10 +371,10 @@ function init(callback) {
     }
 
     function filterEdited(cards) {
-        return cards.filter(function(card) {
+        return cards.filter(function (card) {
             var newCards = findUIDCollection(card.uid)[0],
                 oldCards = findUIDCollectionPrevious(card.uid)[0] || {};
-            return !Object.keys(newCards).every(function(key) {
+            return !Object.keys(newCards).every(function (key) {
                 return newCards[key] === oldCards[key];
             });
         });
@@ -550,7 +551,7 @@ function init(callback) {
             pointer;
 
         if (location === 'EXTRA') {
-            zone.sort(function(primary, secondary) {
+            zone.sort(function (primary, secondary) {
                 if (primary.position === secondary.position) {
                     return 0;
                 }
@@ -565,7 +566,7 @@ function init(callback) {
 
         zone.sort(sortByIndex);
 
-        zone.forEach(function(card, index) {
+        zone.forEach(function (card, index) {
             pointer = uidLookup(card.uid);
             stack[pointer].index = index;
         });
@@ -573,12 +574,59 @@ function init(callback) {
         stack.sort(sortByIndex);
     }
 
+
+    function attachCard(materialInfo, targetInfo) {
+        var target = queryCard(targetInfo.player, targetInfo.location, targetInfo.index, targetInfo.overlayindex),
+            material = queryCard(materialInfo.player, materialInfo.location, materialInfo.index, materialInfo.overlayindex);
+
+        target.overlayUnits.push(materialUID);
+        setState({
+            player: material.player,
+            clocation: material.location,
+            index: material.index,
+            moveplayer: target.player,
+            movelocation: target.location,
+            moveindex: target.index,
+            moveposition: 'FaceUp',
+            overlayindex: target.overlayUnits.length
+        });
+    }
+
+    function detatchCard(targetInfo, index, moveInfo) {
+        var target = queryCard(targetInfo.player, targetInfo.location, targetInfo.index, targetInfo.overlayindex),
+            material = filterUID(stack, target.overlayUnits[index]);
+
+            target.overlayUnits.splice(index, 1);
+            
+        setState({
+            player: material.player,
+            clocation: material.location,
+            index: material.index,
+            moveplayer: moveInfo.player,
+            movelocation: moveInfo.location,
+            moveindex: moveInfo.index,
+            moveposition:moveInfo.position,
+            overlayindex: moveInfo.overlayindex
+        });
+    }
+
+    function giveMaterial(targetInfo, index, recieverInfo) {
+        var target = queryCard(targetInfo.player, targetInfo.location, targetInfo.index, 0),
+            reciever = queryCard(recieverInfo.player, recieverInfo.location, recieverInfo.index, 0),
+            material = filterUID(stack, target.overlayUnits[index]),
+            uid = material.uid;
+
+            target.overlayUnits.splice(index, 1);
+            attachCard(material, target);
+    }
+
     /**
      * Finds a card, then moves it elsewhere. Crux of the engine.
      * @param {ChangeRequest} changeRequest Payload describing a query to find a card, and what to change it to.
+     * @param {Boolean} recursive Prevent the callback from firing.
      * @returns {undefined}
      */
-    function setState(changeRequest) {
+    function setState(changeRequest, recursive) {
         console.log(changeRequest);
         var player = changeRequest.player,
             clocation = changeRequest.clocation,
@@ -591,6 +639,7 @@ function init(callback) {
             uid = changeRequest.uid,
             target = queryCard(player, clocation, index, overlayindex, uid),
             pointer = uidLookup(target.uid),
+            cleanup,
             zone;
 
         if (movelocation === 'GRAVE' || movelocation === 'REMOVED') {
@@ -608,12 +657,38 @@ function init(callback) {
         if (stack[pointer].position === 'HAND') {
             stack[pointer].position = 'FaceUp';
         }
-        reIndex(player, 'GRAVE');
-        reIndex(player, 'HAND');
-        reIndex(player, 'EXTRA');
-        reIndex(player, 'EXCAVATED');
+        stack[pointer].overlayUnits.forEach(function (materialUID, index) {
+            var unit = filterUID(materialUID);
+            setState({
+                player: unit.player,
+                clocation: unit.location,
+                index: unit.index,
+                moveplayer: moveindex,
+                movelocation: movelocation,
+                moveindex: moveindex,
+                moveposition: moveposition,
+                overlayindex: index
+            }, true)
+        });
+
+        if (movelocation === 'GRAVE' || movelocation === 'REMOVED') {
+            stack[pointer].overlayUnits = [];
+        }
+
+        cleanup = (movelocation == 'GRAVE') ? reIndex(moveplayer, 'GRAVE') : undefined;
+        cleanup = (movelocation == 'HAND') ? reIndex(moveplayer, 'HAND') : undefined;
+        cleanup = (movelocation == 'EXTRA') ? reIndex(moveplayer, 'EXTRA') : undefined;
+        cleanup = (movelocation == 'EXCAVATED') ? reIndex(moveplayer, 'EXCAVATED') : undefined;
+
+        cleanup = (clocation == 'GRAVE') ? reIndex(player, 'GRAVE') : undefined;
+        cleanup = (clocation == 'HAND') ? reIndex(player, 'HAND') : undefined;
+        cleanup = (clocation == 'EXTRA') ? reIndex(player, 'EXTRA') : undefined;
+        cleanup = (clocation == 'EXCAVATED') ? reIndex(player, 'EXCAVATED') : undefined;
+
         cleanCounters(stack);
-        callback(generateView(), stack);
+        if (!recursive) {
+            callback(generateView(), stack);
+        }
     }
 
 
@@ -851,7 +926,7 @@ function init(callback) {
      */
     function revealCallback(reference, player, call) {
         var reveal = [];
-        reference.forEach(function(card, index) {
+        reference.forEach(function (card, index) {
             reveal.push(Object.assign({}, card));
             reveal[index].position = 'FaceUp'; // make sure they can see the card and all data on it.
         });
@@ -879,8 +954,6 @@ function init(callback) {
             }
         }, stack);
     }
-
-
 
     /**
      * Reveal the top card of the players deck.
@@ -1201,17 +1274,17 @@ function init(callback) {
             1: parseInt(settings.startLP)
         };
 
-        player1.main.forEach(function(card, index) {
+        player1.main.forEach(function (card, index) {
             stack.push(makeCard('DECK', 0, index, stack.length, card));
         });
-        player2.main.forEach(function(card, index) {
+        player2.main.forEach(function (card, index) {
             stack.push(makeCard('DECK', 1, index, stack.length, card));
         });
 
-        player1.extra.forEach(function(card, index) {
+        player1.extra.forEach(function (card, index) {
             stack.push(makeCard('EXTRA', 0, index, stack.length, card));
         });
-        player2.extra.forEach(function(card, index) {
+        player2.extra.forEach(function (card, index) {
             stack.push(makeCard('EXTRA', 1, index, stack.length, card));
         });
         if (manual) {
@@ -1246,8 +1319,8 @@ function init(callback) {
      * @returns {Card[]} colllection of cards
      */
     function getGroup(requirement) {
-        return stack.filter(function(card) {
-            return Object.keys(requirement).filter(function(property) {
+        return stack.filter(function (card) {
+            return Object.keys(requirement).filter(function (property) {
                 return (requirement[property] === card[property]);
             }).length > 0;
         });
@@ -1352,12 +1425,12 @@ function init(callback) {
             deck = filterlocation(playersCards, 'DECK'),
             idCollection = [];
 
-        deck.forEach(function(card) {
+        deck.forEach(function (card) {
             idCollection.push(card.id);
         });
 
         shuffle(idCollection); // shuffle the "deck".
-        deck.forEach(function(card, index) {
+        deck.forEach(function (card, index) {
             card.id = idCollection[index]; // finalize the shuffle
         });
         state.duelistChat.push('<pre>' + username + ' shuffled their deck.</pre>');
@@ -1375,12 +1448,12 @@ function init(callback) {
             hand = filterlocation(playersCards, 'HAND'),
             idCollection = [];
 
-        hand.forEach(function(card) {
+        hand.forEach(function (card) {
             idCollection.push(card.id);
         });
 
         shuffle(idCollection); // shuffle the "deck".
-        hand.forEach(function(card, index) {
+        hand.forEach(function (card, index) {
             card.id = idCollection[index]; // finalize the shuffle
         });
         callback(generateView('shuffleHand' + player), stack); // alert UI of the shuffle.
@@ -1399,7 +1472,7 @@ function init(callback) {
             idCollection = [];
 
         // copy the ids to a sperate place
-        deck.forEach(function(card) {
+        deck.forEach(function (card) {
             idCollection.push(card.id);
         });
 
@@ -1407,7 +1480,7 @@ function init(callback) {
         idCollection.reverse();
 
         // reassign them.
-        deck.forEach(function(card, index) {
+        deck.forEach(function (card, index) {
             card.id = idCollection[index];
 
             // flip the card over.
@@ -1418,7 +1491,7 @@ function init(callback) {
 
 
     function offsetZone(player, zone) {
-        stack.forEach(function(card, index) {
+        stack.forEach(function (card, index) {
             if (card.player === player && card.location === zone) {
                 card.index += 1;
             }
@@ -1482,7 +1555,7 @@ function init(callback) {
         // Here we set an event listener. `answerListener` is exposed to the controller.
         // So when the user answers this question we can fire `onAnswerFromUser` and pass the data to it.
         // https://nodejs.org/api/events.html#events_emitter_once_eventname_listener
-        answerListener.once(uuid, function(data) {
+        answerListener.once(uuid, function (data) {
             onAnswerFromUser(data);
         });
         callback(output, stack);
@@ -1568,18 +1641,18 @@ function init(callback) {
                 id: 'scissors',
                 value: 2
             }], {
-                max: 1,
-                min: 1
-            }, function(answer) {
-                var result = determineResult(0, answer[0]);
-                if (result === false) {
-                    notify(ask);
-                    return;
-                }
-                if (result !== undefined) {
-                    notify(resolver(result));
-                }
-            });
+                    max: 1,
+                    min: 1
+                }, function (answer) {
+                    var result = determineResult(0, answer[0]);
+                    if (result === false) {
+                        notify(ask);
+                        return;
+                    }
+                    if (result !== undefined) {
+                        notify(resolver(result));
+                    }
+                });
             question('p1', 'specialCards', [{
                 id: 'rock',
                 value: 0
@@ -1590,18 +1663,18 @@ function init(callback) {
                 id: 'scissors',
                 value: 2
             }], {
-                max: 1,
-                min: 1
-            }, function(answer) {
-                var result = determineResult(1, answer[0]);
-                if (result === false) {
-                    notify(ask);
-                    return;
-                }
-                if (result !== undefined) {
-                    notify(resolver(result));
-                }
-            });
+                    max: 1,
+                    min: 1
+                }, function (answer) {
+                    var result = determineResult(1, answer[0]);
+                    if (result === false) {
+                        notify(ask);
+                        return;
+                    }
+                    if (result !== undefined) {
+                        notify(resolver(result));
+                    }
+                });
         }
         ask();
     }

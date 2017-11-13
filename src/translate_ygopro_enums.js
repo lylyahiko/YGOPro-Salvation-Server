@@ -371,7 +371,7 @@ enums.timeout = {
     'MSG_SELECT_OPTION': 0,
     'MSG_SELECT_CARD': 0,
     'MSG_SELECT_CHAIN': 0,
-    'MSG_SELECT_PLACE': 0,
+    'MSG_SELECT_PLACE': 100,
     'MSG_SELECT_POSITION': 0,
     'MSG_SELECT_TRIBUTE': 0,
     'MSG_SORT_CHAIN': 0,
