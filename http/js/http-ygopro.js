@@ -146,7 +146,7 @@ function ygoproQuestion(message) {
                 reveal(message.options.positions.map(function(position) {
                     var
                         card = message.options,
-                        src = (card.id) ? 'https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/' + card.id + '.png' : 'img/textures/cover.jpg';
+                        src = (card.id) ?  getCardObject(parseInt(card.id, 10)).picture : 'img/textures/cover.jpg';
 
                     revealcache.push(card);
                     return '<img id="revealuid' + card.id + '" class="revealedcard" src="' + src + '" data-id="' + card.id + '" onclick = "resolveQuestion(toBytesInt32(ygoproPositions["' + position + '"]))" data-uid="' + card.uid + '" data-position="' + position + '" / > ';
@@ -160,7 +160,7 @@ function ygoproQuestion(message) {
 
 function summonFlash(id) {
     $('#effectflasher').css('display', 'block');
-    $('#effectflasher .mainimage').attr('src', 'https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/pics/' + id + '.png');
+    $('#effectflasher .mainimage').attr('src', getCardObject(parseInt(id, 10)).picture);
     setTimeout(function() {
         $('#effectflasher').css('display', 'none');
     }, 500);

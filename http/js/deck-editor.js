@@ -7,12 +7,12 @@ function cardLoadError() {
         $(this).attr('src', '/img/textures/unknown.jpg');
     }
     if ($(this).attr('reloaded') === 'attempted') {
-        $(this).attr('src', getCardObject(parseInt(id, 10)).picture);
+        $(this).attr('src', getCardObject(parseInt(id, 10)+2).picture);
         $(this).attr('reloaded', 'failed');
     } else {
         $(this).attr('reloaded', 'attempted');
         if (id !== 'undefined') {
-            $(this).attr('src', getCardObject(parseInt(id, 10)).picture);
+            $(this).attr('src', getCardObject(parseInt(id, 10)+1).picture);
         } else {
             $(this).attr('src', '/img/textures/unknown.jpg');
         }
@@ -846,7 +846,7 @@ var deckEditor = (function() {
                 src = card.id + '.png';
             html += '<div class="searchwrapper" data-card-limit="' + card.limit + '">';
             html += '<img class="deckeditcard card" id="deceditcard' + index + zone + '" data-dropindex="' + index + '" data-dropzone="' + zone + '"  data-id = "' + card.id + '"';
-            html += 'src="https://raw.githubusercontent.com/shadowfox87/YGOTCGOCGPics323x323/master/pics/' + src + '" data-id="' + card.id + '" ondragstart="createCardReference(\'' + zone + '\', ' + index + ');" onclick = "deckeditonclick(' + index + ', \'' + zone + '\')" / >';
+            html += 'src="'+getCardObject(parseInt(card.id, 10)).picture+'" data-id="' + card.id + '" ondragstart="createCardReference(\'' + zone + '\', ' + index + ');" onclick = "deckeditonclick(' + index + ', \'' + zone + '\')" / >';
             html += '</div>';
         });
 
