@@ -1745,7 +1745,10 @@ function init(callback) {
         retryLastQuestion,
         rps: rps,
         generateUpdateView,
-        ygoproUpdate
+        ygoproUpdate,
+        attachCard,
+        detachCard,
+        giveMaterial
     };
 }
 

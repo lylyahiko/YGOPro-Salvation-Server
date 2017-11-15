@@ -26,7 +26,7 @@ function askUser(gameBoard, slot, message, ygopro) {
     gameBoard.question(slot, message.command, message, {
         max: 1,
         min: 1
-    }, function(answer) {
+    }, function (answer) {
         ygopro.write(gameResponse('CTOS_RESPONSE', new Buffer(answer[0])));
     });
 }
@@ -39,7 +39,7 @@ function askUser(gameBoard, slot, message, ygopro) {
  * @returns {Number} Index of the card in the given options.
  */
 function resolveCardIndex(list, card) {
-    var number = list.findIndex(function(option) {
+    var number = list.findIndex(function (option) {
         var index = (option.player === card[0]),
             location = (option.location === enums.locations[card[1]]),
             sequence = (option.index === card[2]);
@@ -65,13 +65,63 @@ function decomposeMove(gameBoard, moveRequest) {
             moveRequest.id,
             moveRequest.moveindex);
         return;
-    } 
+    }
     if (deletingCard) {
         moveRequest.movelocation = 'INMATERIAL';
         gameBoard.setState(moveRequest);
         return;
     }
-    gameBoard.setState(moveRequest);
+    if (simplyMovingCard) {
+        gameBoard.setState(moveRequest);
+        return;
+    }
+    if (convertingToXyZUnit) {
+        gameBoard.attachCard({
+            player: moveRequest.player,
+            location: moveRequest.location,
+            index: moveRequest.index,
+            overlayindex: 0
+        },
+        {
+            player: moveRequest.moveplayer,
+            location: moveRequest.movelocation,
+            index: moveRequest.moveindex,
+            overlayindex: 0
+        })
+        return;
+    }
+    if (convertingToCard) {
+        gameBoard.detatchCard({
+            player: moveRequest.player,
+            location: moveRequest.location,
+            index: moveRequest.index,
+            overlayindex: 0
+        },
+        moveRequest.pp,
+        {
+            player: moveRequest.moveplayer,
+            location: moveRequest.movelocation,
+            index: moveRequest.moveindex,
+            overlayindex: 0
+        });
+        return;
+    } else {
+        // Move Xyz Unit from one card to another, example Rank-Up Magic Barian's Force.
+        gameBoard.giveMaterial({
+            player: moveRequest.player,
+            location: moveRequest.location,
+            index: moveRequest.index,
+            overlayindex: 0
+        },
+        moveRequest.pp,
+        {
+            player: moveRequest.moveplayer,
+            location: moveRequest.movelocation,
+            index: moveRequest.moveindex,
+            overlayindex: 0
+        })
+        return;
+    }
     return;
 }
 
@@ -98,12 +148,12 @@ function boardController(gameBoard, slot, message, ygopro) {
                 side: Array(0),
                 extra: Array(message.player1extrasize).fill(0)
             }, {
-                main: Array(message.player2decksize).fill(0),
-                side: Array(0),
-                extra: Array(message.player2extrasize).fill(0)
-            }, false, {
-                startLP: message.lifepoints1
-            });
+                    main: Array(message.player2decksize).fill(0),
+                    side: Array(0),
+                    extra: Array(message.player2extrasize).fill(0)
+                }, false, {
+                    startLP: message.lifepoints1
+                });
             break;
         case ('MSG_HINT'):
             break;
@@ -314,8 +364,8 @@ function boardController(gameBoard, slot, message, ygopro) {
             break;
         case ('MSG_SELECT_CARD'):
             // [number of cards selected, index of that card, etc...]
-            gameBoard.question(slot, message.command, message, { min: message.select_min, max: message.select_max }, function(answer) {
-                var messageBuffer = [answer.length].concat(answer.map(function(card) {
+            gameBoard.question(slot, message.command, message, { min: message.select_min, max: message.select_max }, function (answer) {
+                var messageBuffer = [answer.length].concat(answer.map(function (card) {
                     return resolveCardIndex(message.select_options, card);
                 }));
                 ygopro.write(gameResponse('CTOS_RESPONSE', new Buffer(messageBuffer)));
@@ -332,10 +382,10 @@ function boardController(gameBoard, slot, message, ygopro) {
             askUser(gameBoard, slot, message, ygopro);
             break;
         case ('MSG_SELECT_TRIBUTE'):
-            gameBoard.question(slot, message.command, message, { min: message.select_min, max: message.select_max }, function(answer) {
-                var messageBuffer = [answer.length].concat(answer.map(function(card) {
+            gameBoard.question(slot, message.command, message, { min: message.select_min, max: message.select_max }, function (answer) {
+                var messageBuffer = [answer.length].concat(answer.map(function (card) {
                     return resolveCardIndex(message.selectable_targets, card);
-                })).filter(function(card) {
+                })).filter(function (card) {
                     return (card !== undefined);
                 });
                 ygopro.write(gameResponse('CTOS_RESPONSE', new Buffer(messageBuffer)));
@@ -359,7 +409,7 @@ function boardController(gameBoard, slot, message, ygopro) {
         case ('MSG_CONFIRM_CARDS'):
             break;
         case ('MSG_UPDATE_DATA'): // inconsistent
-            message.cards.forEach(function(card, index) {
+            message.cards.forEach(function (card, index) {
                 if (card) {
                     try {
                         gameBoard.setState({
@@ -427,13 +477,13 @@ function boardController(gameBoard, slot, message, ygopro) {
             }, {
                 id: 'scissors',
                 value: 2
-            }], { min: 1, max: 1 }, function(answer) {
+            }], { min: 1, max: 1 }, function (answer) {
                 var choice = cardMap[answer[0]];
                 ygopro.write(gameResponse(choice));
             });
             break;
         case ('STOC_SELECT_TP'): // Good
-            gameBoard.question(slot, 'STOC_SELECT_TP', [0, 1], { min: 1, max: 1 }, function(answer) {
+            gameBoard.question(slot, 'STOC_SELECT_TP', [0, 1], { min: 1, max: 1 }, function (answer) {
                 ygopro.write(gameResponse('CTOS_TP_RESULT', answer[0]));
             });
             return {};

@@ -550,17 +550,11 @@ function recieveSTOC(gameBoard, packet) {
                     message.player = BufferIO.readInt8();
                     message.locationAsEnum = BufferIO.readInt8();
                     message.clocation = enums.locations[message.locationAsEnum];
-                    if (message.locationAsEnum & 0x80) {
-                        message.location = 'OVERLAY';
-                    }
                     message.index = BufferIO.readInt8();
                     message.pp = BufferIO.readInt8(); // padding?? previous position??
                     message.moveplayer = BufferIO.readInt8();
                     message.movelocationAsEnum = BufferIO.readInt8();
                     message.movelocation = enums.locations[message.movelocationAsEnum];
-                    if (message.movelocationAsEnum & 0x80){
-                        message.movelocation = 'OVERLAY';
-                    }
                     message.moveindex = BufferIO.readInt8();
                     message.moveposition = enums.positions[BufferIO.readInt8()];
                     message.reason = BufferIO.readInt32(); //debug data??
